@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "bitstream_mode0"
+version = "0.1.0"
+description = "Reference implementation of bitstream mode 0"
+authors = ["Ramachandra Rao Rakesh Rao <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
+license = "LICENCE.md"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+pandas = "^1.1.3"
+numpy = "^1.19.2"
+scikit-learn = "^0.23.2"
+scipy = "^1.5.2"
+sklearn-json = "^0.1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+bitstream_mode0 = "bitstream_mode0:main"
