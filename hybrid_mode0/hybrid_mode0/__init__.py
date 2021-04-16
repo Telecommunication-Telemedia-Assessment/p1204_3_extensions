@@ -32,13 +32,12 @@ def hyn0_predict(
 	re_encoded_video = os.path.join(temporary_re_encoded_video_folder, flat_name(get_basename(videofilename)) + ".mkv")
 	print(f"re_encoded_video = {re_encoded_video}")
 
-	encoder = ""
-	if video_codec == "h264":
-		encoder = "libx264"
-	if video_codec == "hevc":
-		encoder = "libx265"
-	if video_codec == "vp9":
-		encoder = "libvpx-vp9"
+	encoder_mapping = {
+		"h264": "libx264",
+		"hevc": "libx265",
+		"vp9": "libvpx-vp9"
+	}
+	encoder = encoder_mapping.get(video_codec, "")
 
 	if hybrid_model_type == 2:
 		cmd = "ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v libx265 -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null".format(
@@ -96,7 +95,7 @@ def hyn0_predict(
 
 	# print(f"encoding command = {cmd}")
 	# res = shell_call(cmd).strip()
-	
+
 	# prediction = predict_quality(
 	#     re_encoded_video, #videofilename,
 	#     model,
@@ -263,7 +262,7 @@ def main(_=[]):
 		results = pool.starmap(hyn0_predict, params)
 	else:
 		results = list(itertools.starmap(hyn0_predict, params))
-		
+
 	print(json.dumps(results, indent=4, sort_keys=True))
 	logging.info(f"""store all results to {a["result_folder"]}""")
 	os.makedirs(a["result_folder"], exist_ok=True)
