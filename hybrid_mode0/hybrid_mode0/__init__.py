@@ -13,6 +13,23 @@ from p1204_3 import *
 from p1204_3.utils import *
 
 
+def re_encode_video(videofilename, encoder, video_bitrate, video_width, video_height, video_framerate, re_encoded_video):
+    cmd = " ".join(f"""
+        ffmpeg -nostdin -loglevel quiet -threads 4 -y -i
+        '{videofilename}'
+        -c:v {encoder}
+        -b:v {video_bitrate}
+        -vf scale="{video_width}:{video_height}"
+        -r {video_framerate}
+        -pix_fmt yuv420p
+        -an "{re_encoded_video}" 2>/dev/null
+    """.split())
+
+    logging.debug(f"encoding command = {cmd}")
+    res = shell_call(cmd).strip()
+    return res
+
+
 def hyn0_predict(
     videofilename,
     model,
@@ -48,64 +65,51 @@ def hyn0_predict(
 
     if hybrid_model_type == 2:
         # hybrid_model_type == 2 uses h265 as target video codec
-        cmd = f"ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v libx265 -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null"
-        # .format(videofilename=videofilename, video_bitrate=video_bitrate, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
+        encoder = "libx265"
 
-        logging.debug(f"encoding command = {cmd}")
-        res = shell_call(cmd).strip()
+    re_encode_video(
+        videofilename,
+        "libx265",
+        video_bitrate,
+        video_width,
+        video_height,
+        video_framerate,
+        re_encoded_video
+    )
 
-        prediction = predict_quality(
-            re_encoded_video, #videofilename,
-            model,
-            device_type,
-            device_resolution,
-            viewing_distance,
-            display_size,
-            temporary_folder,
-            cache_features
-        )
-        logging.debug(prediction)
-
-        per_sequence_transcoded = prediction["per_sequence"]
-        per_second_scores = []
-
-        codec_specific_coeffs = {
-            "h264": [0.90534066, 0.09309030],
-            "vp9": [0.85302496, 0.69794354]
-        }
-
-        if video_codec in codec_specific_coeffs:
-            prediction["per_sequence"] =  codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
-
-        for per_second_score in prediction["per_second"]:
-            per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
-        prediction["per_second"] = per_second_scores
-
-
-
-    if hybrid_model_type == 1:
-        # hybrid_model_type == 1 uses the specified videocodec for reencoding
-        cmd = f"ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v '{encoder}' -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null"
-        #.format(videofilename=videofilename, video_bitrate=video_bitrate, video_codec=encoder, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
-
-        logging.debug(f"encoding command = {cmd}")
-        res = shell_call(cmd).strip()
-
-        prediction = predict_quality(
-            re_encoded_video, #videofilename,
-            model,
-            device_type,
-            device_resolution,
-            viewing_distance,
-            display_size,
-            temporary_folder,
-            cache_features
-        )
-
-        logging.debug(prediction)
-        os.remove(re_encoded_video)
+    prediction = predict_quality(
+        re_encoded_video, #videofilename,
+        model,
+        device_type,
+        device_resolution,
+        viewing_distance,
+        display_size,
+        temporary_folder,
+        cache_features
+    )
+    logging.debug(prediction)
 
     os.remove(re_encoded_video)
+
+    if hybrid_model_type == 1:
+        # for hybrid_model_type no correction is performed
+        return prediction
+
+    per_sequence_transcoded = prediction["per_sequence"]
+    per_second_scores = []
+
+    codec_specific_coeffs = {
+        "h264": [0.90534066, 0.09309030],
+        "vp9": [0.85302496, 0.69794354]
+    }
+
+    if video_codec in codec_specific_coeffs:
+        prediction["per_sequence"] =  codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
+
+    for per_second_score in prediction["per_second"]:
+        per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
+    prediction["per_second"] = per_second_scores
+
     return prediction
 
 
@@ -161,28 +165,32 @@ def main(_=[]):
     )
     parser.add_argument(
         "-br", "--re_encoding_bitrate",
-        type=float,
-        help="bitrate to re-encode the video",
+        help="bitrate to re-encode the video; supports ffmpeg style bitrate, e.g. 100k, 5M",
+        required=True
     )
     parser.add_argument(
         "-vw", "--re_encoding_width",
-        type=float,
+        type=int,
         help="width to re-encode the video",
+        required=True
     )
     parser.add_argument(
         "-vh", "--re_encoding_height",
-        type=float,
+        type=int,
         help="height to re-encode the video",
+        required=True
     )
     parser.add_argument(
         "-fr", "--re_encoding_framerate",
         type=float,
         help="framerate to re-encode the video",
+        required=True
     )
     parser.add_argument(
         "-codec", "--re_encoding_codec",
         type=str,
         help="codec to re-encode the video",
+        required=True
     )
     parser.add_argument(
         "-d",
@@ -203,7 +211,14 @@ def main(_=[]):
     )
 
     a = vars(parser.parse_args())
-    logging.basicConfig(level=logging.DEBUG)
+
+    if a["debug"]:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug("debug output enabled")
+    elif a["quiet"]:
+        logging.basicConfig(level=logging.ERROR)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     logging.info(f"handle the following videos (# {len(a['video'])}): \n  " + "\n  ".join(a["video"]))
     os.makedirs(a["tmp_reencoded"], exist_ok=True)
