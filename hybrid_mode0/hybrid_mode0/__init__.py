@@ -125,25 +125,6 @@ def hyn0_predict(
 
     return prediction
 
-# SG: re_encoding and  re_encoding_known_codec are never called?
-def re_encoding(video, video_bitrate, video_width, video_height, video_framerate, video_codec, output_folder, hybrid_model_type):
-    assert(False)
-    re_encoded_video = os.path.join(output_folder, flat_name(get_basename(video)) + ".mkv")
-    if hybrid_model_type:
-        cmd = f"""ffmpeg -nostdin -loglevel quite -threads 4 -y -i {video} -c:v libx265 -b:v {video_bitrate}k -vf scale="{video_width}:{video_height}" -r {video_framerate} -pix_fmt yuv420p -an {re_encoded_video} 2>/dev/null"""
-    else:
-        cmd = f"""ffmpeg -nostdin -loglevel quite -threads 4 -y -i {video} -c:v {video_codec} -b:v {video_bitrate}k -vf scale="{video_width}:{video_height}" -r {video_framerate} -pix_fmt yuv420p -an {re_encoded_video} 2>/dev/null"""
-    shell_call(cmd)
-    return re_encoded_video
-
-
-def re_encoding_known_codec(video, video_bitrate, video_width, video_height, video_framerate, video_codec, output_folder):
-    assert(False)
-    re_encoded_video = os.path.join(output_folder, flat_name(get_basename(video)) + ".mkv")
-    cmd = f"""ffmpeg -nostdin -loglevel quite -threads 4 -y -i {video} -c:v {video_codec} -b:v {video_bitrate}k -vf scale="{video_width}:{video_height}" -r {video_framerate} -pix_fmt yuv420p -an {re_encoded_video} 2>/dev/null"""
-    shell_call(cmd)
-    return re_encoded_video
-
 
 def main(_=[]):
     # argument parsing
