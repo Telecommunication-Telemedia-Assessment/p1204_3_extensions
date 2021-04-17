@@ -10,7 +10,7 @@ from hybrid_mode0.file_utils import *
 
 import p1204_3
 from p1204_3 import *
-from p1204_3.util import *
+from p1204_3.utils import *
 
 
 def hyn0_predict(
