@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+"""
+style: black -l 140 model.py
+"""
 import logging
 import json
 import os
 import datetime
 
+from bitstream_mode1 import __version__
 from bitstream_mode1.utils import assert_file
 from bitstream_mode1.utils import assert_msg
 from bitstream_mode1.utils import ffprobe
@@ -26,7 +30,7 @@ from bitstream_mode1.extract_video_frame_info import *
 
 class BitstreamMode1:
     """
-    ITU-T P.1204.3 short term video quality prediction model
+    bitstram mode 1 short term video quality prediction model
     """
 
     def __init__(self):
@@ -52,60 +56,55 @@ class BitstreamMode1:
 
         # change this to different things for mobile and pc
         def predqp_pc(row):
+            if row["Codec"] not in ["h264", "hevc", "vp9"]:
+                return -1
             if row["Codec"] == "h264":
-                e = -5.45370021 
-                d =  0.24788992 
-                c =  5.78207198 
-                b = -7.39512320 
-                a =  28.4333174 
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
+                e = -5.45370021
+                d =  0.24788992
+                c =  5.78207198
+                b = -7.39512320
+                a =  28.4333174
             if row["Codec"] == "hevc":
-                e = -2.28896532 
-                d = -0.89995975 
-                c =  5.15729271 
-                b = -6.52974529 
-                a =  22.3936569 
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
+                e = -2.28896532
+                d = -0.89995975
+                c =  5.15729271
+                b = -6.52974529
+                a =  22.3936569
             if row["Codec"] == "vp9":
-                e = -18.7808971 
-                d = -10.2195346 
-                c =  40.6831660 
-                b = -51.1209683 
+                e = -18.7808971
+                d = -10.2195346
+                c =  40.6831660
+                b = -51.1209683
                 a =  92.1245351
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
-            return -1
+            pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
+            return pred_qp
 
         def predqp_mobile(row):
+            if row["Codec"] not in ["h264", "hevc", "vp9"]:
+                return -1
             if row["Codec"] == "h264":
                 e = -6.51258585
                 d = -0.86271189
                 c =  6.11739209
                 b = -7.40096124
                 a =  30.6150034
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
             if row["Codec"] == "hevc":
                 e = -3.83762247
                 d = -3.04775031
                 c =  5.77213226
                 b = -7.05771310
                 a =  29.6766107
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
             if row["Codec"] == "vp9":
-                e =  -24.9768715    
-                d =   1.83157999    
-                c =   34.3946143    
-                b =  -49.8642457    
-                a =   145.132249    
-                pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
-                return pred_qp
-            return -1
+                e =  -24.9768715
+                d =   1.83157999
+                c =   34.3946143
+                b =  -49.8642457
+                a =   145.132249
+            pred_qp = a + b*np.log(row["IFrameRatio_mean_noniframesize"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"]) + e*np.log(row["IFrameRatio_iframe_noniframe_ratio_mean"])
+            return pred_qp
 
-        if device_type == "pc" or device_type == "tv":
+
+        if device_type.lower() in ["pc", "tv"]:
             prediction_features["pred_qp"] = prediction_features.apply(predqp_pc, axis=1)
         else:
             prediction_features["pred_qp"] = prediction_features.apply(predqp_mobile, axis=1)
@@ -129,7 +128,7 @@ class BitstreamMode1:
         cod_deg = sum([prediction_features[c] * mos_q_baseline_pc(prediction_features, params[c + "_a"], params[c + "_b"],
                                                     params[c + "_c"], params[c + "_d"]) for c in codecs])
 
-        if device_type == "pc" or device_type == "tv":
+        if device_type.lower() in ["pc", "tv"]:
             x = -12.8292
             y = 2.4358
             z = -41.0545
@@ -155,89 +154,10 @@ class BitstreamMode1:
         predicted_score = np.vectorize(map_to_5)(pred)
         initial_predicted_score = np.vectorize(map_to_5)(pred)
         prediction_features["predicted_mos_mode1_baseline"] = initial_predicted_score
-        
-        """
-        prediction_features["log_framerate"] = np.log(prediction_features["Framerate"])
-        prediction_features["log_res"] = np.log(prediction_features["Resolution"])
-        prediction_features["log_bitrate"] = np.log(prediction_features["Bitrate"])
-        prediction_features["bpp"] = 1024 * prediction_features["Bitrate"] / (prediction_features["Resolution"] * prediction_features["Framerate"])
-        prediction_features["log_bpp"] = np.log(prediction_features["bpp"])
-        prediction_features["scale_factor"] = prediction_features["Resolution"]/display_res
 
-        residual_rf_model = load_serialized(rf_model)
-        prediction_features_rf = prediction_features.copy()
-        prediction_features_rf["h264"] = 0
-        prediction_features_rf["hevc"] = 0
-        prediction_features_rf["vp9"] = 0
-
-        def fill_codec(row):
-            if row["Codec"] == "h264":
-                row["h264"] = 1
-                row["hevc"] = 0
-                row["vp9"] = 0
-                return row  # row["h264"]
-            if row["Codec"] == "hevc":
-                row["h264"] = 0
-                row["hevc"] = 1
-                row["vp9"] = 0
-                return row  # row["hevc"]
-            if row["Codec"] == "vp9":
-                row["h264"] = 0
-                row["hevc"] = 0
-                row["vp9"] = 1
-                return row  # row["vp9"]
-            return -1
-
-        # prediction_features_rf["h264"] = prediction_features_rf.apply(fill_codec, axis=1)
-        # prediction_features_rf["hevc"] = prediction_features_rf.apply(fill_codec, axis=1)
-        # prediction_features_rf["vp9"] = prediction_features_rf.apply(fill_codec, axis=1)
-        prediction_features_rf = prediction_features_rf.apply(fill_codec, axis=1)
-
-        prediction_features_rf = prediction_features_rf.rename(columns={"IFrameRatio_100_percentile_noniframesize": "100_percentile_noniframesize",
-                                                                        "IFrameRatio_std_noniframesize":"std_noniframesize",
-                                                                        "IFrameRatio_iqr_noniframesize":"iqr_noniframesize",
-                                                                        "IFrameRatio_iqr_iframesize":"iqr_iframesize",
-                                                                        "IFrameRatio_kurtosis_noniframesize":"kurtosis_noniframesize",
-                                                                        "IFrameRatio_kurtosis_iframesize":"kurtosis_iframesize",
-                                                                        "IFrameRatio_mean_noniframesize":"mean_noniframesize",
-                                                                        "IFrameRatio_iframe_noniframe_ratio_mean":"iframe_noniframe_ratio_mean",
-                                                                        "IFrameRatio_iframe_noniframe_ratio_median":"iframe_noniframe_ratio_median",
-                                                                        "IFrameRatio_iframe_noniframe_ratio_std":"iframe_noniframe_ratio_std"})
-
-
-        feature_columns = list(set(["Bitrate", "Resolution", "Framerate", "pred_qp", "predicted_mos_mode1_baseline", 
-                            "quant", "100_percentile_noniframesize", 
-                            "std_noniframesize","h264", "hevc", "vp9", 'iqr_iframesize', 'iqr_noniframesize', 
-                            'kurtosis_iframesize', 'log_res', "log_bitrate", "log_framerate", "log_bpp", 
-                            'kurtosis_noniframesize', "mean_noniframesize", 
-                           'iframe_noniframe_ratio_mean',
-                           'iframe_noniframe_ratio_median', 'iframe_noniframe_ratio_std', "scale_factor"]))
-        feature_columns = sorted(feature_columns)
-
-        prediction_features_rf = prediction_features_rf[sorted(feature_columns)]
-        prediction_features_rf = prediction_features_rf.fillna(0)
-        residual_mos = residual_rf_model.predict(prediction_features_rf)
-        # print("residual_mos = {}".format(residual_mos))
-
-        predicted_score = np.vectorize(map_to_5)(pred)
-        predicted_score = initial_predicted_score + residual_mos
-        predicted_score = np.clip(predicted_score,1,5)
-        prediction_features_rf["rf_pred"] = predicted_score
-        w = 0.5
-        final_pred = (
-            w * prediction_features_rf["predicted_mos_mode1_baseline"] + (1 - w) * prediction_features_rf["rf_pred"]
-        )
-        # return final_pred
-        return final_pred #initial_predicted_score #final_pred #predicted_score
-        """
-        # return predicted_score
-
-        # feature_values = {col: prediction_features_rf[col] for col in feature_columns}
-        # feature_values = {col: prediction_features[col] for col in feature_columns}
         result = {
-            "final_pred": predicted_score, #final_pred,
+            "final_pred": predicted_score,
             "debug": {
-                # "baseline": prediction_features_rf["predicted_mos_mode3_baseline"],
                 "baseline": prediction_features["predicted_mos_mode1_baseline"],
                 "coding_deg": cod_deg,
                 "upscaling_deg": resolution,
@@ -246,6 +166,7 @@ class BitstreamMode1:
                 # "rf_pred": prediction_features["rf_pred"],
             },
             # "features": feature_values
+
         }
         return result
 
@@ -304,7 +225,6 @@ class BitstreamMode1:
             f"your video codec is not supported by the model: {ffprobe_result['codec']}",
         )
 
-        
         model_config = json_load(model_config_filename)
 
         device_type = "pc" if device_type in ["pc", "tv"] else "mobile"
@@ -322,7 +242,6 @@ class BitstreamMode1:
 
         self.display_res = display_res
 
-        # check_or_install_videoparser()
         os.makedirs(temporary_folder, exist_ok=True)
 
         feature_cache = os.path.join(
@@ -337,9 +256,6 @@ class BitstreamMode1:
                 return {}
 
             # calculate features
-            print("I am here")
-            print(self.features_used())
-            print("I am done")
             features = pd.DataFrame(
                 [extract_features(videofilename, self.features_used(), ffprobe_result, framesizeinfo_result_file)]
             )
@@ -352,7 +268,7 @@ class BitstreamMode1:
 
         # per_sequence = self._calculate(features, model_coefficients, rf_model, display_res, device_type)
         per_sequence = self._calculate(features, model_coefficients, display_res, device_type)
-        
+
         per_second = per_sample_interval_function(per_sequence["final_pred"], features)
         return {
             "video_full_path": videofilename,
@@ -365,4 +281,6 @@ class BitstreamMode1:
                 "temporal_deg": float(per_sequence["debug"]["temporal_deg"]),
             },
             "date": str(datetime.datetime.now()),
+            "model": "bitstream_mode1",
+            "version": __version__,
         }

@@ -5,8 +5,9 @@ import logging
 import shutil
 import subprocess
 import json
-import pandas as pd
+
 from bitstream_mode1.utils import shell_call
+
 
 def ffprobe_frame_info(video_segment_file, output_dir_full_path, skipexisting=True):  #(filename):
     """ run ffprobe to get some information of a given video file
@@ -40,32 +41,3 @@ def ffprobe_frame_info(video_segment_file, output_dir_full_path, skipexisting=Tr
         raise Exception("{} is somehow not valid, so ffprobe could not extract anything".format(filename))
         return ""
     return report_file_name
-
-    """
-    needed = {
-        "pkt_size": "unknown",
-        "pict_type": "unknown",
-        "iframesizes": "unknown",
-        "noni_framesizes": "unknown"
-    }
-
-
-    # frame_info_file = filename + ".json"
-    frame_info_list = []
-    with open(report_file_name) as f:
-        val = json.load(f)
-
-        for x in val["frames"]:
-            frame_info_list.append(x)
-
-        df = pd.DataFrame(frame_info_list)
-        df = df[["pict_type", "pkt_size"]]
-        df["pkt_size"] = pd.to_numeric(df["pkt_size"])
-
-        df_i = df[df["pict_type"] == "I"]
-        df_non_i = df[df["pict_type"] != "I"]
-    
-    needed["iframesizes"] = df_i["pkt_size"]
-    needed["noni_framesizes"] = df_non_i["pkt_size"]
-    return needed
-    """
