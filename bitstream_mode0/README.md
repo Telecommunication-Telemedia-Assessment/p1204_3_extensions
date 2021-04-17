@@ -73,14 +73,14 @@ optional arguments:
   --tmp TMP             temporary folder to store bitstream stats and other
                         intermediate results (default: ./tmp)
 
-rrao, stg7 2020
+rrao, stg7 2021
 
 ```
 
 Most parameter default settings are for the PC/TV use case.
 
 ## License
-Copyright 2017-2020 Technische Universität Ilmenau, Deutsche Telekom AG
+Copyright 2017-2021 Technische Universität Ilmenau, Deutsche Telekom AG
 
 Permission is hereby granted, free of charge, to use the software for non-commercial research purposes.
 
