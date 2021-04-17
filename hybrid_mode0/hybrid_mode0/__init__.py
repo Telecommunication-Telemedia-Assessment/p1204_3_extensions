@@ -63,21 +63,21 @@ def hyn0_predict(
         per_sequence_transcoded = prediction["per_sequence"]
         per_second_scores = []
 
-        # SG: is there no correction for H265 required?
-        coeffs = {
+        codec_specific_coeffs = {
             "h264": [0.90534066, 0.09309030],
             "vp9": [0.85302496, 0.69794354]
-            "hevc": [1, 0]  # no change
         }
-        prediction["per_sequence"] =  coeffs[video_codec][0] * prediction["per_sequence"] + coeffs[video_codec][1]
+
+        if video_codec in codec_specific_coeffs:
+            prediction["per_sequence"] =  codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
 
         for per_second_score in prediction["per_second"]:
             per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
         prediction["per_second"] = per_second_scores
 
     else:
-        cmd = "ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v '{video_codec}' -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null".format(
-        videofilename=videofilename, video_bitrate=video_bitrate, video_codec=encoder, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
+        cmd = f"ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v '{encoder}' -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null"
+        #.format(videofilename=videofilename, video_bitrate=video_bitrate, video_codec=encoder, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
 
         logging.debug(f"encoding command = {cmd}")
         res = shell_call(cmd).strip()
@@ -127,6 +127,7 @@ def hyn0_predict(
 
 # SG: re_encoding and  re_encoding_known_codec are never called?
 def re_encoding(video, video_bitrate, video_width, video_height, video_framerate, video_codec, output_folder, hybrid_model_type):
+    assert(False)
     re_encoded_video = os.path.join(output_folder, flat_name(get_basename(video)) + ".mkv")
     if hybrid_model_type:
         cmd = f"""ffmpeg -nostdin -loglevel quite -threads 4 -y -i {video} -c:v libx265 -b:v {video_bitrate}k -vf scale="{video_width}:{video_height}" -r {video_framerate} -pix_fmt yuv420p -an {re_encoded_video} 2>/dev/null"""
@@ -137,6 +138,7 @@ def re_encoding(video, video_bitrate, video_width, video_height, video_framerate
 
 
 def re_encoding_known_codec(video, video_bitrate, video_width, video_height, video_framerate, video_codec, output_folder):
+    assert(False)
     re_encoded_video = os.path.join(output_folder, flat_name(get_basename(video)) + ".mkv")
     cmd = f"""ffmpeg -nostdin -loglevel quite -threads 4 -y -i {video} -c:v {video_codec} -b:v {video_bitrate}k -vf scale="{video_width}:{video_height}" -r {video_framerate} -pix_fmt yuv420p -an {re_encoded_video} 2>/dev/null"""
     shell_call(cmd)
