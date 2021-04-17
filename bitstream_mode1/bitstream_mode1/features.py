@@ -9,6 +9,7 @@ import scipy.stats
 from bitstream_mode1.utils import assert_msg
 from bitstream_mode1.utils import file_open
 
+
 def extract_features(videofilename, used_features, ffprobe_result, framesizeinfo_result_file):
     """ extract all specified features for a given video file """
     features = {}
@@ -36,8 +37,7 @@ class PVS:
             # print(framesize_info_stats)
             val = json.load(framestat)
 
-            for x in val["frames"]:
-                frame_info_list.append(x)
+            frame_info_list = [x for x in val["frames"]]
 
             df = pd.DataFrame(frame_info_list)
             df = df[["pict_type", "pkt_size"]]
@@ -45,7 +45,7 @@ class PVS:
 
             df_i = df[df["pict_type"] == "I"]
             df_non_i = df[df["pict_type"] != "I"]
-        
+
         framesize_info_stats["iframesizes"] = df_i["pkt_size"]
         framesize_info_stats["noni_framesizes"] = df_non_i["pkt_size"]
         # return needed
