@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-    Author: Steve Göring
+Author: Steve Göring
+
+style: black file_utils.py -l 140
+
 """
 import os
 import sys
@@ -8,6 +11,7 @@ import shutil
 import json
 import logging
 import subprocess
+
 
 def get_basename(filename):
     """
