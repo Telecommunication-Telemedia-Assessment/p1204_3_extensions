@@ -11,7 +11,9 @@ from .file_utils import *
 from . import __version__
 
 import p1204_3
-from p1204_3 import *
+from p1204_3 import predict_quality as p1204_3_predict_quality
+from p1204_3.generic import *
+
 from p1204_3.utils import *
 
 
@@ -65,12 +67,11 @@ def hyn0_predict(
         "h265": "libx265",
         "vp9": "libvpx-vp9"
     }
-    encoder = encoder_mapping.get(video_codec, "")
 
-    if hybrid_model_type == 2:
-        # hybrid_model_type == 2 uses h265 as target video codec
-        encoder = "libx265"
-    assert_msg(encoder != "", f"video_codec={video_codec} not yet supported, use hybrid_model_type = 2")
+    # hybrid_model_type == 2 uses h265 as target video codec
+    encoder = "libx265" if hybrid_model_type == 2 else encoder_mapping[video_codec]
+
+    assert_msg(encoder is not None, f"video_codec={video_codec} not yet supported, use hybrid_model_type = 2")
 
     encoding_params = "_".join(map(str, [
             video_bitrate,
@@ -99,8 +100,8 @@ def hyn0_predict(
     )
 
     logging.info(f"predict quality of {re_encoded_video}")
-    prediction = predict_quality(
-        re_encoded_video, #videofilename,
+    prediction = p1204_3_predict_quality(
+        re_encoded_video,
         model,
         device_type,
         device_resolution,
@@ -112,7 +113,7 @@ def hyn0_predict(
 
     prediction["model"] = "hybrid_type_" + str(hybrid_model_type)
     prediction["version"] = __version__
-    prediction["video_basename"] = os.path.basename(videofilename)
+    prediction["video_basename"] = os.path.basename(videofilename) + encoding_params
     prediction["video_full_path"] = videofilename
 
     prediction["hybrid_encoding_params"] = {
@@ -129,7 +130,11 @@ def hyn0_predict(
         os.remove(re_encoded_video)
 
     if hybrid_model_type == 1:
-        # for hybrid_model_type no correction is performed
+        # for hybrid_model_type 1 no correction is performed
+        # SG: todo: a correction may be required, e.g.
+        # poetry run hybrid_mode0 ../test_videos/BlackDesert_30_1920x1080_60_2000_h264_nvenc.mp4  -br 100k -vw 1024 -vh 120 -fr 60  -d --cpu_count 1 -cache_reencodes --hybrid_model_type 1 -codec h264
+        # returns 3.408 (overall quality), and the video is really bad
+        # while the mode 2 variant returns 1.05
         return prediction
 
     per_sequence_transcoded = prediction["per_sequence"]
@@ -139,6 +144,9 @@ def hyn0_predict(
         "h264": [0.90534066, 0.09309030],
         "vp9": [0.85302496, 0.69794354]
     }
+
+    if video_codec not in codec_specific_coeffs:
+        logging.warn(f"for your current video codec {video_codec} no correction of the final scores is performed")
 
     if video_codec in codec_specific_coeffs:
         prediction["per_sequence"] =  codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
@@ -168,7 +176,8 @@ def main(_=[]):
     )
     parser.add_argument(
         "--hybrid_model_type",
-        choices=[1,2],
+        choices=[1, 2],
+        type=int,
         default=1,
         help="applicable input values: {1,2}; two variants: (1) uses the specific codec to re-encode the video, (2) uses HEVC to re-encode the video irrespective of the codec",
     )
@@ -183,11 +192,11 @@ def main(_=[]):
     parser.add_argument(
         "--viewing_distance",
         choices=VIEWING_DISTANCES,
-        default="1.5xH",
+        default=DEFAULT_VIEWING_DISTANCE,
         help="viewing distance relative to the display height",
     )
     parser.add_argument(
-        "--display_size", choices=DISPLAY_SIZES, type=float, default=55, help="display diagonal size in inches"
+        "--display_size", choices=DISPLAY_SIZES, type=float, default=DEFAULT_DISPLAY_SIZE, help="display diagonal size in inches"
     )
     parser.add_argument(
         "--tmp",
