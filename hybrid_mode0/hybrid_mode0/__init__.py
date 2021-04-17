@@ -30,7 +30,8 @@ def hyn0_predict(
     temporary_re_encoded_video_folder,
     hybrid_model_type
 ):
-    msg_assert(hybrid_model_type in [1,2], f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]")
+    assert_msg(hybrid_model_type in [1,2], f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]")
+
     assert_file(videofilename, f"videofilename={videofilename} does not exist")
 
     logging.info(f"videofilename = {videofilename}")
@@ -43,7 +44,7 @@ def hyn0_predict(
         "vp9": "libvpx-vp9"
     }
     encoder = encoder_mapping.get(video_codec, "")
-    msg_assert(encoder != "", f"video_codec={video_codec} not yet supported")
+    assert_msg(encoder != "", f"video_codec={video_codec} not yet supported")
 
     if hybrid_model_type == 2:
         # hybrid_model_type == 2 uses h265 as target video codec
@@ -181,7 +182,6 @@ def main(_=[]):
     parser.add_argument(
         "-codec", "--re_encoding_codec",
         type=str,
-        default="hevc",
         help="codec to re-encode the video",
     )
     parser.add_argument(
