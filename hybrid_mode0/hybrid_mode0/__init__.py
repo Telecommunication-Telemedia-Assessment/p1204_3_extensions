@@ -125,7 +125,7 @@ def main(_=[]):
     )
     parser.add_argument(
         "--hybrid_model_type",
-        choice=[1,2],
+        choices=[1,2],
         default=1,
         help="applicable input values: {1,2}; two variants: (1) uses the specific codec to re-encode the video, (2) uses HEVC to re-encode the video irrespective of the codec",
     )
