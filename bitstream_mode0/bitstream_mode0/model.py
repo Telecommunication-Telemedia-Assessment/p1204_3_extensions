@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+"""
+style: black -l 140 model.py
+"""
 import logging
 import json
 import os
 import datetime
 
+from bitstream_mode0 import __version__
 from bitstream_mode0.utils import assert_file
 from bitstream_mode0.utils import assert_msg
 from bitstream_mode0.utils import ffprobe
@@ -24,7 +28,7 @@ from bitstream_mode0.features import *
 
 class BitstreamMode0:
     """
-    ITU-T P.1204.3 short term video quality prediction model
+    bistream mode 0  short term video quality prediction model
     """
 
     def __init__(self):
@@ -45,58 +49,63 @@ class BitstreamMode0:
 
         prediction_features = prediction_features.copy()
 
-        #prediction_features = load_dict_values(prediction_features, "IFrameRatio") # this was never doing anything
+        print(params)
+        # SG: shouldn't all these coeffs be part of the model.json file?, if not what values are then in this json file?
+        #   in theory depending on the model and device all these coeffs should be part of params
+        #   but it doesnt look like this
+
+        # there seems to be also something too much with these files
+        # ./models/bitstream_mode0/config.json  <- has mobile and PC and is used..
+        # ./models/bitstream_mode0/mode0baseline_mobile_final_coeff.json
+        # ./models/bitstream_mode0/mode0baseline_pc_final_coeff.json
+
 
         # change this to different things for mobile and pc
         def predqp_pc(row):
+            if row["Codec"] not in ["h264", "hevc", "vp9"]:
+                return -1
             if row["Codec"] == "h264":
                 d =  5.62309933
                 c =  4.19647182
                 b = -5.35863448
                 a = -5.72843619
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
             if row["Codec"] == "hevc":
                 d =  4.08694769
                 c =  4.82981247
                 b = -6.02561845
                 a = -7.68665264
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
+
             if row["Codec"] == "vp9":
-                d =  27.5875919 
+                d =  27.5875919
                 c =  37.5395453
-                b = -46.5290494 
-                a = -140.838395 
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
-            return -1
+                b = -46.5290494
+                a = -140.838395
+            pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
+            return pred_qp
 
         def predqp_mobile(row):
+            if row["Codec"] not in ["h264", "hevc", "vp9"]:
+                return -1
             if row["Codec"] == "h264":
                 d = 3.01147460
                 c = 4.37840851
                 b = -4.92630532
                 a = -1.46439015
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
             if row["Codec"] == "hevc":
                 d = 2.34100646
                 c = 4.76721523
                 b =-5.86551697
                 a =-1.65354441
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
             if row["Codec"] == "vp9":
                 d =  30.8075359
                 c =  28.7095166
                 b = -41.0775277
                 a = -65.7419925
-                pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
-                return pred_qp
-            return -1
+            pred_qp = a + b*np.log(row["Bitrate"]) + c*np.log(row["Resolution"]) + d*np.log(row["Framerate"])
+            return pred_qp
 
-        if device_type == "pc" or device_type == "tv":
+
+        if device_type.lower() in ["pc", "tv"]:
             prediction_features["pred_qp"] = prediction_features.apply(predqp_pc, axis=1)
         else:
             prediction_features["pred_qp"] = prediction_features.apply(predqp_mobile, axis=1)
@@ -116,11 +125,10 @@ class BitstreamMode0:
 
         codecs = prediction_features["Codec"].unique()
 
-
         cod_deg = sum([prediction_features[c] * mos_q_baseline_pc(prediction_features, params[c + "_a"], params[c + "_b"],
                                                     params[c + "_c"], params[c + "_d"]) for c in codecs])
 
-        if device_type == "pc" or device_type == "tv":
+        if device_type.lower() in ["pc", "tv"]:
             x = -12.8292
             y = 2.4358
             z = -41.0545
@@ -135,17 +143,17 @@ class BitstreamMode0:
         print("quant = {}".format(prediction_features["quant"]))
         print("display_res = {}".format(display_res))
         resolution = x * np.log(y * (prediction_features["Resolution"]/display_res))
-        resolution = np.clip(resolution,0,100)
+        resolution = np.clip(resolution, 0, 100)
 
         framerate = z * np.log(k * prediction_features["Framerate"]/60)
-        framerate = np.clip(framerate,0,100)
+        framerate = np.clip(framerate, 0, 100)
 
         pred = 100 - (cod_deg + resolution + framerate)
         pred = np.vectorize(mos_from_r)(pred)
         pred = np.clip(pred,1,5)
         # predicted_score = np.vectorize(map_to_5)(pred)
         initial_predicted_score = np.vectorize(map_to_5)(pred)
-        
+
         return {
             "final_pred": initial_predicted_score,
             "coding_deg": cod_deg,
@@ -217,28 +225,10 @@ class BitstreamMode0:
 
         self.display_res = display_res
 
-        # check_or_install_videoparser()
-        os.makedirs(temporary_folder, exist_ok=True)
-
-        feature_cache = os.path.join(
-            temporary_folder, os.path.splitext(os.path.basename(videofilename))[0] + "_feat.pkl"
+        # calculate features
+        features = pd.DataFrame(
+            [extract_features(videofilename, self.features_used(), ffprobe_result)]
         )
-        logging.info(f"use feature cache file {feature_cache}")
-        if not os.path.isfile(feature_cache):
-            # run bitstream parser
-            # bitstream_parser_result_file = run_videoparser(videofilename, temporary_folder)
-            # if bitstream_parser_result_file == "":
-            #     logging.error(f"no bitstream stats file for {videofilename}")
-            #     return {}
-
-            # calculate features
-            features = pd.DataFrame(
-                [extract_features(videofilename, self.features_used(), ffprobe_result)]#, bitstream_parser_result_file)]
-            )
-            features.to_pickle(feature_cache)
-        else:
-            logging.info("features are already cached, extraction skipped")
-            features = pd.read_pickle(feature_cache)
 
         logging.info("features extracted")
 
@@ -257,4 +247,6 @@ class BitstreamMode0:
                 "temporal_deg": float(per_sequence["temporal_deg"]),
             },
             "date": str(datetime.datetime.now()),
+            "model": "bitstream_mode0",
+            "version": __version__
         }
