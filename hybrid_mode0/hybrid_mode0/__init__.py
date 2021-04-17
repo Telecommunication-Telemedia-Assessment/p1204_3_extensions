@@ -10,6 +10,7 @@ from hybrid_mode0.file_utils import *
 
 import p1204_3
 from p1204_3 import *
+from p1204_3.util import *
 
 
 def hyn0_predict(
@@ -29,7 +30,9 @@ def hyn0_predict(
     temporary_re_encoded_video_folder,
     hybrid_model_type
 ):
-    assert(hybrid_model_type in [1,2])
+    msg_assert(hybrid_model_type in [1,2], f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]")
+    assert_file(videofilename, f"videofilename={videofilename} does not exist")
+
     logging.info(f"videofilename = {videofilename}")
     re_encoded_video = os.path.join(temporary_re_encoded_video_folder, flat_name(get_basename(videofilename)) + ".mkv")
     logging.info(f"re_encoded_video = {re_encoded_video}")
@@ -40,8 +43,10 @@ def hyn0_predict(
         "vp9": "libvpx-vp9"
     }
     encoder = encoder_mapping.get(video_codec, "")
+    msg_assert(encoder != "", f"video_codec={video_codec} not yet supported")
 
     if hybrid_model_type == 2:
+        # hybrid_model_type == 2 uses h265 as target video codec
         cmd = f"ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v libx265 -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null"
         # .format(videofilename=videofilename, video_bitrate=video_bitrate, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
 
@@ -75,7 +80,10 @@ def hyn0_predict(
             per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
         prediction["per_second"] = per_second_scores
 
-    else:
+
+
+    if hybrid_model_type == 1:
+        # hybrid_model_type == 1 uses the specified videocodec for reencoding
         cmd = f"ffmpeg -nostdin -loglevel quiet -threads 4 -y -i '{videofilename}' -c:v '{encoder}' -b:v {video_bitrate}k -vf scale='{video_width}:{video_height}' -r '{video_framerate}' -pix_fmt yuv420p -an '{re_encoded_video}' 2>/dev/null"
         #.format(videofilename=videofilename, video_bitrate=video_bitrate, video_codec=encoder, video_width=video_width, video_height=video_height, video_framerate=video_framerate, re_encoded_video=re_encoded_video)
 
@@ -94,35 +102,9 @@ def hyn0_predict(
         )
 
         logging.debug(prediction)
-
-
-    # print(f"encoding command = {cmd}")
-    # res = shell_call(cmd).strip()
-
-    # prediction = predict_quality(
-    #     re_encoded_video, #videofilename,
-    #     model,
-    #     device_type,
-    #     device_resolution,
-    #     viewing_distance,
-    #     display_size,
-    #     temporary_folder,
-    #     cache_features
-    # )
+        os.remove(re_encoded_video)
 
     os.remove(re_encoded_video)
-
-    # return predict_quality(
-    #     re_encoded_video, #videofilename,
-    #     model,
-    #     device_type,
-    #     device_resolution,
-    #     viewing_distance,
-    #     display_size,
-    #     temporary_folder,
-    #     cache_features
-    # )
-
     return prediction
 
 
