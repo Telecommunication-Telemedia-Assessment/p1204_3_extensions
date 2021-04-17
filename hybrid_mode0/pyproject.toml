@@ -2,7 +2,8 @@
 name = "hybrid_mode0"
 version = "0.1.0"
 description = ""
-authors = ["rakeshraor <rakesh-rao.ramachandra-rao@tu-ilmenau.de>"]
+authors = ["rakeshraor <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
+license = "LICENCE.md"
 
 [tool.poetry.dependencies]
 python = "^3.6"
@@ -19,4 +20,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-hybrid_mode0 = "hybrid_mode0:main"
+hybrid_mode0 = "hybrid_mode0:hybrid:main"
