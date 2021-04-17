@@ -20,4 +20,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-hybrid_mode0 = "hybrid_mode0:hybrid:main"
+hybrid_mode0 = "hybrid_mode0.hybrid:main"

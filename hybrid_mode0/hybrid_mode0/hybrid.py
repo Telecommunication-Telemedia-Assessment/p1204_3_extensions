@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import sys
 import os
@@ -7,7 +6,9 @@ import json
 import multiprocessing
 import logging
 import itertools
-from hybrid_mode0.file_utils import *
+
+from .file_utils import *
+from . import __version__
 
 import p1204_3
 from p1204_3 import *
@@ -15,6 +16,9 @@ from p1204_3.utils import *
 
 
 def re_encode_video(videofilename, encoder, video_bitrate, video_width, video_height, video_framerate, re_encoded_video):
+    if os.path.isfile(re_encoded_video):
+        logging.warn(f"{videofilename} has been alreadyy reencoded with these settings, see {re_encoded_video}; please check, encoding settings may vary, however the encoding step will be skipped")
+        return
     cmd = " ".join(f"""
         ffmpeg -nostdin -loglevel quiet -threads 4 -y -i
         '{videofilename}'
@@ -46,31 +50,47 @@ def hyn0_predict(
     video_framerate,
     video_codec,
     temporary_re_encoded_video_folder,
+    cache_reencodes,
     hybrid_model_type
 ):
+    logging.info(f"handle videofilename = {videofilename}")
+
     assert_msg(hybrid_model_type in [1,2], f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]")
-
     assert_file(videofilename, f"videofilename={videofilename} does not exist")
-
-    logging.info(f"videofilename = {videofilename}")
-    re_encoded_video = os.path.join(temporary_re_encoded_video_folder, flat_name(get_basename(videofilename)) + ".mkv")
-    logging.info(f"re_encoded_video = {re_encoded_video}")
+    assert_msg(not(hybrid_model_type == 1 and video_codec is None), f"for hybrid_model_type 1 you need to specify a vidoe_codec")
 
     encoder_mapping = {
         "h264": "libx264",
         "hevc": "libx265",
+        "h265": "libx265",
         "vp9": "libvpx-vp9"
     }
     encoder = encoder_mapping.get(video_codec, "")
-    assert_msg(encoder != "", f"video_codec={video_codec} not yet supported")
 
     if hybrid_model_type == 2:
         # hybrid_model_type == 2 uses h265 as target video codec
         encoder = "libx265"
+    assert_msg(encoder != "", f"video_codec={video_codec} not yet supported, use hybrid_model_type = 2")
+
+    encoding_params = "_".join(map(str, [
+            video_bitrate,
+            video_width,
+            video_height,
+            video_framerate,
+            encoder
+        ])
+    )
+
+    re_encoded_video = os.path.join(
+        temporary_re_encoded_video_folder,
+        flat_name(get_basename(videofilename)) + "_settings_" +  encoding_params
+        + ".mkv"
+    )
+    logging.info(f"re_encoded_video = {re_encoded_video}")
 
     re_encode_video(
         videofilename,
-        "libx265",
+        encoder,
         video_bitrate,
         video_width,
         video_height,
@@ -78,6 +98,7 @@ def hyn0_predict(
         re_encoded_video
     )
 
+    logging.info(f"predict quality of {re_encoded_video}")
     prediction = predict_quality(
         re_encoded_video, #videofilename,
         model,
@@ -88,9 +109,24 @@ def hyn0_predict(
         temporary_folder,
         cache_features
     )
+
+    prediction["model"] = "hybrid_type_" + str(hybrid_model_type)
+    prediction["version"] = __version__
+    prediction["video_basename"] = os.path.basename(videofilename)
+    prediction["video_full_path"] = videofilename
+
+    prediction["hybrid_encoding_params"] = {
+        "video_bitrate": video_bitrate,
+        "video_width": video_width,
+        "video_height": video_height,
+        "video_framerate": video_framerate,
+        "encoder": encoder
+    }
+
     logging.debug(prediction)
 
-    os.remove(re_encoded_video)
+    if not cache_reencodes:
+        os.remove(re_encoded_video)
 
     if hybrid_model_type == 1:
         # for hybrid_model_type no correction is performed
@@ -109,6 +145,7 @@ def hyn0_predict(
 
     for per_second_score in prediction["per_second"]:
         per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
+
     prediction["per_second"] = per_second_scores
 
     return prediction
@@ -190,8 +227,7 @@ def main(_=[]):
     parser.add_argument(
         "-codec", "--re_encoding_codec",
         type=str,
-        help="codec to re-encode the video",
-        required=True
+        help="codec to re-encode the video, if not specific mode will be set to 1"
     )
     parser.add_argument(
         "-d",
@@ -203,6 +239,11 @@ def main(_=[]):
         "-nocached_features",
         action="store_true",
         help="no caching of features",
+    )
+    parser.add_argument(
+        "-cache_reencodes",
+        action="store_true",
+        help="caching reencoded videos",
     )
     parser.add_argument(
         "-q",
@@ -239,6 +280,7 @@ def main(_=[]):
             a["re_encoding_framerate"],
             a["re_encoding_codec"],
             a["tmp_reencoded"],
+            a["cache_reencodes"],
             a["hybrid_model_type"]
         )
         for video in a["video"]
