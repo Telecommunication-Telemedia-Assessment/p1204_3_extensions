@@ -36,7 +36,7 @@ def main(_=[]):
     # argument parsing
     parser = argparse.ArgumentParser(
         description="Bitstream mode 0 video quality model reference implementation",
-        epilog="rrao, stg7 2020",
+        epilog="rrao, stg7 2021",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("video", type=str, nargs="+", help="input video to estimate quality")

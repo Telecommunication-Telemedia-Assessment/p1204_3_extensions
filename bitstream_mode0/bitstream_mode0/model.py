@@ -51,8 +51,9 @@ class BitstreamMode0:
         # SG: shouldn't all these coeffs be part of the model.json file?, if not what values are then in this json file?
         #   in theory depending on the model and device all these coeffs should be part of params
         #   but it doesnt look like this
+        # same confusion with mode 1
 
-        # there seems to be also something too much with these files
+        # SG: there seems to be also something too much with these files
         # ./models/bitstream_mode0/config.json  <- has mobile and PC and is used..
         # ./models/bitstream_mode0/mode0baseline_mobile_final_coeff.json
         # ./models/bitstream_mode0/mode0baseline_pc_final_coeff.json
