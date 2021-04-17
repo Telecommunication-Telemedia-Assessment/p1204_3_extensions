@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "bitstream_mode0"
 version = "0.1.0"
-description = "Reference implementation of bitstream mode 0"
+description = "bitstream mode 0 model"
 authors = ["Ramachandra Rao Rakesh Rao <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
 license = "LICENCE.md"
 

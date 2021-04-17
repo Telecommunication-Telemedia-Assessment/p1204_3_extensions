@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "bitstream_mode1"
 version = "0.1.0"
-description = ""
-authors = ["rakeshraor <rakesh-rao.ramachandra-rao@tu-ilmenau.de>"]
+description = "bitstream mode 1 model"
+authors = ["Ramachandra Rao Rakesh Rao <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
+license = "LICENCE.md"
 
 [tool.poetry.dependencies]
 python = "^3.8,<3.10"

@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "hybrid_mode0"
 version = "0.1.0"
-description = ""
-authors = ["rakeshraor <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
+description = "hybrid mode 0 model"
+authors = ["Ramachandra Rao Rakesh Rao <rakesh-rao.ramachandra-rao@tu-ilmenau.de>", "Steve Göring <steve.goering@tu-ilmenau.de>"]
 license = "LICENCE.md"
 
 [tool.poetry.dependencies]
