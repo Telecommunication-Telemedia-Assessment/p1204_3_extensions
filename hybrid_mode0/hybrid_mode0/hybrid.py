@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+style: black hybrid.py -l 140
+"""
 import argparse
 import sys
 import os
@@ -17,11 +20,22 @@ from p1204_3.generic import *
 from p1204_3.utils import *
 
 
-def re_encode_video(videofilename, encoder, video_bitrate, video_width, video_height, video_framerate, re_encoded_video):
+def re_encode_video(
+    videofilename,
+    encoder,
+    video_bitrate,
+    video_width,
+    video_height,
+    video_framerate,
+    re_encoded_video,
+):
     if os.path.isfile(re_encoded_video):
-        logging.warn(f"{videofilename} has been alreadyy reencoded with these settings, see {re_encoded_video}; please check, encoding settings may vary, however the encoding step will be skipped")
+        logging.warn(
+            f"{videofilename} has been alreadyy reencoded with these settings, see {re_encoded_video}; please check, encoding settings may vary, however the encoding step will be skipped"
+        )
         return
-    cmd = " ".join(f"""
+    cmd = " ".join(
+        f"""
         ffmpeg -nostdin -loglevel quiet -threads 4 -y -i
         '{videofilename}'
         -c:v {encoder}
@@ -30,7 +44,8 @@ def re_encode_video(videofilename, encoder, video_bitrate, video_width, video_he
         -r {video_framerate}
         -pix_fmt yuv420p
         -an "{re_encoded_video}" 2>/dev/null
-    """.split())
+    """.split()
+    )
 
     logging.debug(f"encoding command = {cmd}")
     res = shell_call(cmd).strip()
@@ -53,39 +68,40 @@ def hyn0_predict(
     video_codec,
     temporary_re_encoded_video_folder,
     cache_reencodes,
-    hybrid_model_type
+    hybrid_model_type,
 ):
     logging.info(f"handle videofilename = {videofilename}")
 
-    assert_msg(hybrid_model_type in [1,2], f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]")
+    assert_msg(
+        hybrid_model_type in [1, 2],
+        f"hybrid_model_type={hybrid_model_type} not valid, must be in [1,2]",
+    )
     assert_file(videofilename, f"videofilename={videofilename} does not exist")
-    assert_msg(not(hybrid_model_type == 1 and video_codec is None), f"for hybrid_model_type 1 you need to specify a vidoe_codec")
+    assert_msg(
+        not (hybrid_model_type == 1 and video_codec is None),
+        f"for hybrid_model_type 1 you need to specify a vidoe_codec",
+    )
 
     encoder_mapping = {
         "h264": "libx264",
         "hevc": "libx265",
         "h265": "libx265",
-        "vp9": "libvpx-vp9"
+        "vp9": "libvpx-vp9",
     }
 
     # hybrid_model_type == 2 uses h265 as target video codec
     encoder = "libx265" if hybrid_model_type == 2 else encoder_mapping[video_codec]
 
-    assert_msg(encoder is not None, f"video_codec={video_codec} not yet supported, use hybrid_model_type = 2")
-
-    encoding_params = "_".join(map(str, [
-            video_bitrate,
-            video_width,
-            video_height,
-            video_framerate,
-            encoder
-        ])
+    assert_msg(
+        encoder is not None,
+        f"video_codec={video_codec} not yet supported, use hybrid_model_type = 2",
     )
+
+    encoding_params = "_".join(map(str, [video_bitrate, video_width, video_height, video_framerate, encoder]))
 
     re_encoded_video = os.path.join(
         temporary_re_encoded_video_folder,
-        flat_name(get_basename(videofilename)) + "_settings_" +  encoding_params
-        + ".mkv"
+        flat_name(get_basename(videofilename)) + "_settings_" + encoding_params + ".mkv",
     )
     logging.info(f"re_encoded_video = {re_encoded_video}")
 
@@ -96,7 +112,7 @@ def hyn0_predict(
         video_width,
         video_height,
         video_framerate,
-        re_encoded_video
+        re_encoded_video,
     )
 
     logging.info(f"predict quality of {re_encoded_video}")
@@ -108,7 +124,7 @@ def hyn0_predict(
         viewing_distance,
         display_size,
         temporary_folder,
-        cache_features
+        cache_features,
     )
 
     prediction["model"] = "hybrid_type_" + str(hybrid_model_type)
@@ -121,7 +137,7 @@ def hyn0_predict(
         "video_width": video_width,
         "video_height": video_height,
         "video_framerate": video_framerate,
-        "encoder": encoder
+        "encoder": encoder,
     }
 
     logging.debug(prediction)
@@ -142,14 +158,16 @@ def hyn0_predict(
 
     codec_specific_coeffs = {
         "h264": [0.90534066, 0.09309030],
-        "vp9": [0.85302496, 0.69794354]
+        "vp9": [0.85302496, 0.69794354],
     }
 
     if video_codec not in codec_specific_coeffs:
         logging.warn(f"for your current video codec {video_codec} no correction of the final scores is performed")
 
     if video_codec in codec_specific_coeffs:
-        prediction["per_sequence"] =  codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
+        prediction["per_sequence"] = (
+            codec_specific_coeffs[video_codec][0] * prediction["per_sequence"] + codec_specific_coeffs[video_codec][1]
+        )
 
     for per_second_score in prediction["per_second"]:
         per_second_scores.append((per_second_score / per_sequence_transcoded) * prediction["per_sequence"])
@@ -167,7 +185,12 @@ def main(_=[]):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("video", type=str, nargs="+", help="input video to estimate quality")
-    parser.add_argument("--result_folder", type=str, default="reports", help="folder to store video quality results")
+    parser.add_argument(
+        "--result_folder",
+        type=str,
+        default="reports",
+        help="folder to store video quality results",
+    )
     parser.add_argument(
         "--model",
         type=str,
@@ -181,8 +204,18 @@ def main(_=[]):
         default=1,
         help="applicable input values: {1,2}; two variants: (1) uses the specific codec to re-encode the video, (2) uses HEVC to re-encode the video irrespective of the codec",
     )
-    parser.add_argument("--cpu_count", type=int, default=multiprocessing.cpu_count(), help="thread/cpu count")
-    parser.add_argument("--device_type", choices=DEVICE_TYPES, default="pc", help="device that is used for playout")
+    parser.add_argument(
+        "--cpu_count",
+        type=int,
+        default=multiprocessing.cpu_count(),
+        help="thread/cpu count",
+    )
+    parser.add_argument(
+        "--device_type",
+        choices=DEVICE_TYPES,
+        default="pc",
+        help="device that is used for playout",
+    )
     parser.add_argument(
         "--device_resolution",
         choices=DEVICE_RESOLUTIONS,
@@ -196,7 +229,11 @@ def main(_=[]):
         help="viewing distance relative to the display height",
     )
     parser.add_argument(
-        "--display_size", choices=DISPLAY_SIZES, type=float, default=DEFAULT_DISPLAY_SIZE, help="display diagonal size in inches"
+        "--display_size",
+        choices=DISPLAY_SIZES,
+        type=float,
+        default=DEFAULT_DISPLAY_SIZE,
+        help="display diagonal size in inches",
     )
     parser.add_argument(
         "--tmp",
@@ -211,32 +248,37 @@ def main(_=[]):
         help="temporary folder to store re-encoded video segments",
     )
     parser.add_argument(
-        "-br", "--re_encoding_bitrate",
+        "-br",
+        "--re_encoding_bitrate",
         help="bitrate to re-encode the video; supports ffmpeg style bitrate, e.g. 100k, 5M",
-        required=True
+        required=True,
     )
     parser.add_argument(
-        "-vw", "--re_encoding_width",
+        "-vw",
+        "--re_encoding_width",
         type=int,
         help="width to re-encode the video",
-        required=True
+        required=True,
     )
     parser.add_argument(
-        "-vh", "--re_encoding_height",
+        "-vh",
+        "--re_encoding_height",
         type=int,
         help="height to re-encode the video",
-        required=True
+        required=True,
     )
     parser.add_argument(
-        "-fr", "--re_encoding_framerate",
+        "-fr",
+        "--re_encoding_framerate",
         type=float,
         help="framerate to re-encode the video",
-        required=True
+        required=True,
     )
     parser.add_argument(
-        "-codec", "--re_encoding_codec",
+        "-codec",
+        "--re_encoding_codec",
         type=str,
-        help="codec to re-encode the video, if not specific mode will be set to 1"
+        help="codec to re-encode the video, if not specific mode will be set to 1",
     )
     parser.add_argument(
         "-d",
@@ -290,7 +332,7 @@ def main(_=[]):
             a["re_encoding_codec"],
             a["tmp_reencoded"],
             a["cache_reencodes"],
-            a["hybrid_model_type"]
+            a["hybrid_model_type"],
         )
         for video in a["video"]
     ]
