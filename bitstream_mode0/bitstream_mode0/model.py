@@ -151,6 +151,7 @@ class BitstreamMode0:
         framerate = np.clip(framerate, 0, 100)
 
         pred = 100 - (cod_deg + resolution + framerate)
+        pred = np.clip(pred, 0, 100)
         pred = np.vectorize(mos_from_r)(pred)
         pred = np.clip(pred, 1, 5)
         # predicted_score = np.vectorize(map_to_5)(pred)
