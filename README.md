@@ -1,4 +1,4 @@
-# p1204_3_advanced_applications
+# P.1204.3 Extensions
 
 This repository contains the P.1204.3 extended models: Mode0, Mode1, Hybrid No-reference Mode 0 (HYN0). The details of the usage of the individual models are described in the README of the respective models which are listed below:
 
