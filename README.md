@@ -39,3 +39,10 @@ If you use this software in your research, please include a link to the reposito
 
 ## License
 GNU General Public License v3. See [LICENSE](LICENSE) file in this repository.
+
+
+## Authors
+
+Main developers:
+* Rakesh Rao Ramachandra Rao - Technische Universität Ilmenau
+* Steve Göring - Technische Universität Ilmenau

@@ -3,7 +3,7 @@ Bitstream Mode 0 is a short term video quality prediction model that uses full b
 
 ## Requirements
 To be able to run the model you need to install some software.
-Currently the model is only tested on Ubuntu >= 18.04.
+Currently the model is only tested on Ubuntu >= 20.04.
 
 * python3, python3-pip, python3-venv
 * poetry (e.g. pip3 install poetry)
@@ -13,7 +13,7 @@ To install all requirements under Ubuntu please run the following commands:
 
 ```bash
 sudo apt-get update -qq
-sudo apt-get install -y -qq python3 python3-venv python3-numpy python3-pip git scons ffmpeg
+sudo apt-get install -y -qq python3 python3-venv python3-numpy python3-pip git ffmpeg
 pip3 install --user poetry
 ```
 
@@ -78,10 +78,3 @@ rrao, stg7 2021
 ```
 
 Most parameter default settings are for the PC/TV use case.
-
-
-## Authors
-
-Main developers:
-* Rakesh Rao Ramachandra Rao - Technische Universität Ilmenau
-* Steve Göring - Technische Universität Ilmenau

@@ -3,7 +3,7 @@ Hybrid No-reference Mode 0 is a short term video quality prediction model that u
 
 ## Requirements
 To be able to run the model you need to install some software.
-Currently the model is only tested on Ubuntu >= 18.04.
+Currently the model is only tested on Ubuntu >= 20.04.
 
 * python3, python3-pip, python3-venv
 * poetry (e.g. pip3 install poetry)
