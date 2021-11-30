@@ -1,6 +1,20 @@
 # p1204_3_advanced_applications
 
-This repository contains the P.1204.3 extended models: Mode0, Mode1, Hybrid No-reference Mode 0 (HYN0). The details of the usage of the individual models are described in the README of the respective models.
+This repository contains the P.1204.3 extended models: Mode0, Mode1, Hybrid No-reference Mode 0 (HYN0). The details of the usage of the individual models are described in the README of the respective models which are listed below:
+
+* [Mode 0](./bitstream_mode0/README.md)
+* [Mode 1](./bitstream_mode1/README.md)
+* [Hybrid No-reference Mode 0](./hybrid_mode0/README.md)
+
+The listed models use [ITU-T P.1204.3](https://github.com/Telecommunication-Telemedia-Assessment/bitstream_mode3_p1204_3) internally with adaptions to other use cases.
+
+
+## General Requirements
+
+All models have in common that they need Python 3 and [poetry](https://python-poetry.org/) installed.
+The code is tested for Linux (Ubuntu >=20.04).
+
+
 
 ## Acknowledgments
 If you use this software in your research, please include a link to the repository and reference one of the following paper.
