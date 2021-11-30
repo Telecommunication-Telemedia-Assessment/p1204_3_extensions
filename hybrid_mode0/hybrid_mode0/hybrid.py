@@ -147,10 +147,6 @@ def hyn0_predict(
 
     if hybrid_model_type == 1:
         # for hybrid_model_type 1 no correction is performed
-        # SG: todo: a correction may be required, e.g.
-        # poetry run hybrid_mode0 ../test_videos/BlackDesert_30_1920x1080_60_2000_h264_nvenc.mp4  -br 100k -vw 1024 -vh 120 -fr 60  -d --cpu_count 1 -cache_reencodes --hybrid_model_type 1 -codec h264
-        # returns 3.408 (overall quality), and the video is really bad
-        # while the mode 2 variant returns 1.05
         return prediction
 
     per_sequence_transcoded = prediction["per_sequence"]

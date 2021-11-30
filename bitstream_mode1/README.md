@@ -1,5 +1,5 @@
-# Bitstream Mode 0 Reference Implementation
-Bitstream Mode 0 is a short term video quality prediction model that uses full bitstream data to estimate video quality scores on a segment level.
+# Bitstream Mode 1 Reference Implementation
+Bitstream Mode 1 is a short term video quality prediction model that uses full bitstream data to estimate video quality scores on a segment level.
 
 ## Requirements
 To be able to run the model you need to install some software.
@@ -34,10 +34,10 @@ For example the [AVT-VQDB-UHD-1](https://github.com/Telecommunication-Telemedia-
 ## Usage
 To use the provided tool, e.g. run
 ```bash
-poetry run bitstream_mode0 test_videos/test_video_h264.mkv
+poetry run bitstream_mode1 test_videos/test_video_h264.mkv
 ```
 
-Otherwise check the included help, `poetry run bitstream_mode0 --help`:
+Otherwise check the included help, `poetry run bitstream_mode1 --help`:
 ```
 usage: bitstream_mode0 [-h] [--result_folder RESULT_FOLDER] [--model MODEL]
                [--cpu_count CPU_COUNT] [--device_type {pc,tv,tablet,mobile}]
