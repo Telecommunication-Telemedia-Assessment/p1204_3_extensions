@@ -20,8 +20,8 @@ The code is tested for Linux (Ubuntu >=20.04).
 If you use this software in your research, please include a link to the repository and reference one of the following paper.
 
 ```
-@inproceedings{rao2021p1204extensions,
-  title={Extending ITU-T P.1204.3 Video Quality Model Towards a Versatile Tool for Video Quality Assessment},
+@inproceedings{rao2022p1204extensions,
+  title={AVQBits -- Adaptive Video Quality Model Based on Bitstream Information for Various Video Applications},
   author={Rakesh {Rao Ramachandra Rao} and Steve G\"oring and Alexander Raake},
   journal={to be published},
 }
