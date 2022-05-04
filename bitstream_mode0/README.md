@@ -73,7 +73,7 @@ optional arguments:
   --tmp TMP             temporary folder to store bitstream stats and other
                         intermediate results (default: ./tmp)
 
-rrao, stg7 2021
+rrao, stg7 2022
 
 ```
 

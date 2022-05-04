@@ -69,7 +69,7 @@ optional arguments:
                         display diagonal size in inches (default: 55)
   --tmp TMP             temporary folder to store bitstream stats and other intermediate results (default: ./tmp)
 
-rrao, stg7 2021
+rrao, stg7 2022
 
 ```
 
