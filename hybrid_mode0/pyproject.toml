@@ -6,7 +6,7 @@ authors = ["Ramachandra Rao Rakesh Rao <rakesh-rao.ramachandra-rao@tu-ilmenau.de
 license = "LICENCE.md"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = ">=3.8,<3.11"
 
 [tool.poetry.dependencies.p1204-3]
 git = "https://github.com/Telecommunication-Telemedia-Assessment/bitstream_mode3_p1204_3.git"
