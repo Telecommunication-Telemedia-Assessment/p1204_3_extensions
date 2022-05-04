@@ -8,6 +8,7 @@ Currently the model is only tested on Ubuntu >= 20.04.
 * python3, python3-pip, python3-venv
 * poetry (e.g. pip3 install poetry)
 * ffmpeg
+* depencencies for the video_parser (see [bitstream_mode3_videoparser](https://github.com/Telecommunication-Telemedia-Assessment/bitstream_mode3_videoparser))
 
 To install all requirements under Ubuntu please run the following commands:
 
@@ -15,6 +16,8 @@ To install all requirements under Ubuntu please run the following commands:
 sudo apt-get update -qq
 sudo apt-get install -y -qq python3 python3-venv python3-numpy python3-pip git scons ffmpeg
 pip3 install --user poetry
+# ffmpeg/videoparser specific
+sudo apt-get -y install autoconf automake build-essential libass-dev libfreetype6-dev libsdl2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo wget zlib1g-dev yasm
 ```
 
 After cloning this repository and installation of all requirements, run the following command:
@@ -34,7 +37,7 @@ For example the [AVT-VQDB-UHD-1](https://github.com/Telecommunication-Telemedia-
 ## Usage
 To use the provided tool, e.g. run
 ```bash
-poetry run bitstream_mode1 test_videos/test_video_h264.mkv
+poetry run hybrid_mode0 test_videos/test_video_h264.mkv
 ```
 
 Otherwise check the included help, `poetry run hybrid_mode0 --help`:

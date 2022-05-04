@@ -13,7 +13,7 @@ The listed models use [ITU-T P.1204.3](https://github.com/Telecommunication-Tele
 
 All models have in common that they need Python 3 and [poetry](https://python-poetry.org/) installed.
 The code is tested for Linux (Ubuntu >=20.04).
-
+Check the specific README files of each of the models for other dependencies.
 
 
 ## Acknowledgments
