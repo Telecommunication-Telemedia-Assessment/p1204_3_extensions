@@ -20,10 +20,15 @@ Check the specific README files of each of the models for other dependencies.
 If you use this software in your research, please include a link to the repository and reference one of the following paper.
 
 ```
-@inproceedings{rao2022p1204extensions,
-  title={AVQBits -- Adaptive Video Quality Model Based on Bitstream Information for Various Video Applications},
-  author={Rakesh {Rao Ramachandra Rao} and Steve G\"oring and Alexander Raake},
-  journal={to be published},
+@ARTICLE{rao2022p1204extensions,
+  author={Ramachandra Rao, Rakesh Rao and Göring, Steve and Raake, Alexander},
+  journal={IEEE Access}, 
+  title={AVQBits—Adaptive Video Quality Model Based on Bitstream Information for Various Video Applications}, 
+  year={2022},
+  volume={10},
+  number={},
+  pages={80321-80351},
+  doi={10.1109/ACCESS.2022.3195527}
 }
 
 @inproceedings{rao2020p1204,
